@@ -1,0 +1,52 @@
+{% extends 'co/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="form-section">
+  <div class="card shadow-sm">
+    <div class="card-header bg-info text-white d-flex align-items-center">
+      <i class="fas fa-comment me-2"></i>
+      <span>Send Feedback to QM</span>
+    </div>
+    <div class="card-body">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      <form action="{% url 'send_feedback' %}" method="POST">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-floating mb-3">
+              <input type="text" class="form-control" name="subject" placeholder="Enter feedback subject" required>
+              <label>Subject:</label>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-floating mb-3">
+              <select class="form-select" name="feedback_type" required>
+                <option value="general">General Feedback</option>
+                <option value="policy">Policy Clarification</option>
+                <option value="process">Process Improvement</option>
+                <option value="urgent">Urgent Matter</option>
+              </select>
+              <label>Feedback Type:</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-floating mb-3">
+          <textarea class="form-control" name="message" rows="4" placeholder="Enter your feedback message..." style="height: 120px" required></textarea>
+          <label>Feedback Message:</label>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-paper-plane me-2"></i>Send Feedback
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

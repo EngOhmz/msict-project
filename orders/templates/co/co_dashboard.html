@@ -1,0 +1,132 @@
+{% extends 'co/base.html' %}
+{% load static %}
+{% block content %}
+<div id="dashboard">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Commanding Officer Dashboard</h2>
+    <button class="btn btn-outline-primary" onclick="refreshStats()">
+      <i class="fas fa-sync-alt me-2"></i>Refresh
+    </button>
+  </div>
+  <!-- Display Messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+  <!-- Statistics Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-primary shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+          <h6>Total Requests</h6>
+          <h3>{{ total_requests }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-warning shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-clock fa-2x mb-2"></i>
+          <h6>Pending Review</h6>
+          <h3>{{ pending_requests }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-success shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-check-circle fa-2x mb-2"></i>
+          <h6>Approved</h6>
+          <h3>{{ approved_requests }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-danger shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-times-circle fa-2x mb-2"></i>
+          <h6>Rejected</h6>
+          <h3>{{ rejected_requests }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-dark shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-flag-checkered fa-2x mb-2"></i>
+          <h6>Completed</h6>
+          <h3>{{ completed_requests }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-2">
+      <div class="card text-white bg-info shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-percentage fa-2x mb-2"></i>
+          <h6>Approval Rate</h6>
+          <p class="card-text display-6">
+            {% if total_requests > 0 %}
+              {{ approved_requests|floatformat:0 }}%
+            {% else %}
+              0%
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Navigation Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card border-warning shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-tasks fa-3x text-warning mb-3"></i>
+          <h4 class="mb-2">Review Requests</h4>
+          <p class="mb-2">{{ pending_requests }} requests awaiting your review</p>
+          <a href="{% url 'review_requests' %}" class="btn btn-warning text-white fw-bold">
+            <i class="fas fa-arrow-right me-2"></i>Go to Review
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-secondary shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-history fa-3x text-secondary mb-3"></i>
+          <h4 class="mb-2">Decision History</h4>
+          <p class="mb-2">View your recent decisions</p>
+          <a href="{% url 'decision_history' %}" class="btn btn-secondary fw-bold">
+            <i class="fas fa-arrow-right me-2"></i>View History
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-info shadow-sm h-100">
+        <div class="card-body text-center">
+          <i class="fas fa-comment-dots fa-3x text-info mb-3"></i>
+          <h4 class="mb-2">Send Feedback</h4>
+          <p class="mb-2">Provide feedback to QM</p>
+          <a href="{% url 'send_feedback' %}" class="btn btn-info text-white fw-bold">
+            <i class="fas fa-arrow-right me-2"></i>Send Feedback
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function refreshStats() {
+  fetch('{% url "dashboard_stats" %}')
+    .then(response => response.json())
+    .then(() => location.reload())
+    .catch(error => console.error('Error refreshing stats:', error));
+}
+setInterval(refreshStats, 120000);  // every 2 minutes
+</script>
+{% endblock %}

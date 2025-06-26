@@ -1,0 +1,107 @@
+{% extends 'department/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Messages -->
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<!-- Dashboard Summary Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card text-white bg-primary shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+        <h6>Total Requests</h6>
+        <h3>{{ total_requests }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-white bg-warning shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-clock fa-2x mb-2"></i>
+        <h6>Pending</h6>
+        <h3>{{ pending_requests }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-white bg-success shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-check-circle fa-2x mb-2"></i>
+        <h6>Approved</h6>
+        <h3>{{ approved_requests }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card text-white bg-danger shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-times-circle fa-2x mb-2"></i>
+        <h6>Rejected</h6>
+        <h3>{{ rejected_count }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Navigation Cards -->
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card border-primary shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-list fa-3x text-primary mb-3"></i>
+        <h4 class="mb-2">My Requests</h4>
+        <p class="mb-2">View your submitted requests</p>
+        <a href="{% url 'my_requests' %}" class="btn btn-primary fw-bold">
+          <i class="fas fa-arrow-right me-2"></i>Go to My Requests
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-success shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
+        <h4 class="mb-2">Submit Request</h4>
+        <p class="mb-2">Request new equipment</p>
+        <a href="{% url 'submit_request' %}" class="btn btn-success fw-bold">
+          <i class="fas fa-arrow-right me-2"></i>Submit Request
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-warning shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-bell fa-3x text-warning mb-3"></i>
+        <h4 class="mb-2">Notifications</h4>
+        <p class="mb-2">See QM responses</p>
+        <a href="{% url 'notifications' %}" class="btn btn-warning text-white fw-bold">
+          <i class="fas fa-arrow-right me-2"></i>View Notifications
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card border-info shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="fas fa-comment-dots fa-3x text-info mb-3"></i>
+        <h4 class="mb-2">Feedback</h4>
+        <p class="mb-2">Recent updates & feedback</p>
+        <a href="{% url 'feedback' %}" class="btn btn-info text-white fw-bold">
+          <i class="fas fa-arrow-right me-2"></i>View Feedback
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

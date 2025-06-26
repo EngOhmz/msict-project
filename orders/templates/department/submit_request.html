@@ -1,0 +1,147 @@
+{% extends 'department/base.html' %}
+{% load static %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-plus-circle me-2"></i>Submit Equipment Request</h2>
+    <a href="{% url 'department_dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+<!-- Display Messages -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex align-items-center">
+                <i class="fas fa-clipboard-list me-2"></i>
+                <span>Equipment Request Form</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{% url 'submit_request' %}" id="requestForm">
+                    {% csrf_token %}
+                    <div class="form-floating mb-3">
+                        <select name="department" class="form-select" id="department" required>
+                            <option value="">Select Department</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for="department"><i class="fas fa-building me-2"></i>Department</label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="form-floating mb-3">
+                                <input type="text" name="equipment" class="form-control" id="equipment" placeholder="Equipment Name" required>
+                                <label for="equipment"><i class="fas fa-box me-2"></i>Equipment Name</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                <input type="number" name="quantity" class="form-control" id="quantity" placeholder="Quantity" min="1" required>
+                                <label for="quantity"><i class="fas fa-hashtag me-2"></i>Quantity</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" name="specifications" class="form-control" id="specifications" placeholder="Technical Specifications">
+                        <label for="specifications"><i class="fas fa-cogs me-2"></i>Technical Specifications (Optional)</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea name="purpose" class="form-control" id="purpose" placeholder="Purpose" style="height: 120px" required></textarea>
+                        <label for="purpose"><i class="fas fa-clipboard-check me-2"></i>Purpose & Justification</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="date" name="required_date" class="form-control" id="required_date">
+                        <label for="required_date"><i class="fas fa-calendar me-2"></i>Required By Date</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea name="additional_notes" class="form-control" id="additional_notes" placeholder="Additional Notes" style="height: 80px"></textarea>
+                        <label for="additional_notes"><i class="fas fa-sticky-note me-2"></i>Additional Notes (Optional)</label>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-outline-secondary me-md-2" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <!-- Guidelines Card -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-header bg-info text-white d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>Submission Guidelines</span>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Provide detailed equipment specifications</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Justify the need clearly</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Set realistic required dates</li>
+                    <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Include quantity needed</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Recent Requests Card -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white d-flex align-items-center">
+                <i class="fas fa-history me-2"></i>
+                <span>Your Recent Requests</span>
+            </div>
+            <div class="card-body">
+                {% if recent_requests %}
+                    {% for req in recent_requests %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>{{ req.date_submitted|date:"M d" }}</small><br>
+                            <strong>{{ req.equipment }}</strong><br>
+                            <span class="badge bg-{% if req.status == 'approved' %}success{% elif req.status == 'rejected' %}danger{% elif req.status == 'forwarded' %}info{% else %}warning{% endif %} badge-sm">
+                                {{ req.get_status_display }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No recent requests</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function resetForm() {
+        if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+            document.getElementById('requestForm').reset();
+        }
+    }
+    // Set minimum date to today for required_date field
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('required_date').setAttribute('min', today);
+    });
+    // Form validation
+    document.getElementById('requestForm').addEventListener('submit', function(e) {
+        const equipment = document.getElementById('equipment').value.trim();
+        const purpose = document.getElementById('purpose').value.trim();
+        if (equipment.length < 3) {
+            e.preventDefault();
+            alert('Equipment name must be at least 3 characters long.');
+            return;
+        }
+        if (purpose.length < 10) {
+            e.preventDefault();
+            alert('Purpose must be at least 10 characters long to provide adequate justification.');
+            return;
+        }
+    });
+</script>
+{% endblock %}

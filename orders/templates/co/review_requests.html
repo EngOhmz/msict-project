@@ -1,0 +1,162 @@
+{% extends 'co/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Review Requests Section -->
+<div id="review" class="form-section">
+  <div class="card shadow-sm">
+    <div class="card-header bg-warning text-dark d-flex align-items-center">
+      <i class="fas fa-tasks me-2"></i>
+      <span>Equipment Requests Awaiting Review</span>
+    </div>
+    <div class="card-body p-0">
+      {% if review_list %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th><i class="fas fa-hashtag"></i> Request #</th>
+                <th><i class="fas fa-building"></i> Department</th>
+                <th><i class="fas fa-box"></i> Equipment</th>
+                <th><i class="fas fa-sort-numeric-up"></i> Quantity</th>
+                <th><i class="fas fa-clipboard-check"></i> Purpose</th>
+                <th><i class="fas fa-sticky-note"></i> QM Note</th>
+                <th><i class="fas fa-thumbs-up"></i> QM Recommendation</th>
+                <th><i class="fas fa-calendar-alt"></i> Submitted</th>
+                <th><i class="fas fa-hourglass-half"></i> Days</th>
+                <th><i class="fas fa-cogs"></i> Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for request in review_list %}
+              <tr class="priority-{{ request.priority }}">
+                <td><strong>{{ request.request_number }}</strong></td>
+                <td>{{ request.department }}</td>
+                <td>{{ request.equipment }}</td>
+                <td>{{ request.quantity }}</td>
+                <td>{{ request.purpose|truncatewords:8 }}</td>
+                <td>
+                  {% if request.qm_note %}
+                    <small>{{ request.qm_note.note|truncatewords:6 }}</small>
+                  {% else %}
+                    <em class="text-muted">No note</em>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if request.qm_note %}
+                    <span class="badge bg-{% if request.qm_note.recommendation == 'approve' %}success{% elif request.qm_note.recommendation == 'reject' %}danger{% else %}warning{% endif %} px-3 py-2 fs-6">
+                      {{ request.qm_note.get_recommendation_display }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary px-3 py-2 fs-6">No recommendation</span>
+                  {% endif %}
+                </td>
+                <td>{{ request.date_submitted|date:"M d, Y" }}</td>
+                <td>
+                  <span class="{% if request.days_pending > 7 %}text-danger{% elif request.days_pending > 3 %}text-warning{% endif %}">
+                    {{ request.days_pending }} days
+                  </span>
+                </td>
+                <td>
+                  <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-success" 
+                      onclick="makeDecision({{ request.id }}, 'approve', '{{ request.equipment|escapejs }}')" title="Approve">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                      onclick="makeDecision({{ request.id }}, 'reject', '{{ request.equipment|escapejs }}')" title="Reject">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" 
+                      onclick="viewFullDetails({{ request.id }})" title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+          <p class="text-muted">No requests pending your review.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Decision Modal must be present on the page -->
+<!-- You can add this modal HTML here if not included in base.html -->
+<div class="modal fade" id="decisionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" id="decision-modal-header">
+        <h5 class="modal-title" id="decision-modal-title">Make Decision</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{% url 'co_action' %}" method="POST">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="hidden" id="decision-request-id" name="request_id">
+          <input type="hidden" id="decision-action" name="action">
+
+          <div class="alert" id="decision-alert">
+            <i class="fas fa-info-circle me-2"></i>
+            You are about to <strong id="decision-action-text"></strong> the request for: <strong id="decision-equipment-name"></strong>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Reason for Decision:</label>
+            <textarea class="form-control" name="reason" rows="3" placeholder="Provide reason for your decision..." required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Additional Notes (Optional):</label>
+            <textarea class="form-control" name="additional_notes" rows="2" placeholder="Any additional comments or instructions..."></textarea>
+          </div>
+
+          <div id="approval-fields" style="display: none;">
+            <div class="mb-3">
+              <label class="form-label">Budget Allocation:</label>
+              <input type="number" class="form-control" name="budget_allocation" step="0.01" placeholder="0.00">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Expected Procurement Date:</label>
+              <input type="date" class="form-control" name="expected_procurement_date">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="decision-submit-btn">
+            <i class="fas fa-gavel me-2"></i>Confirm Decision
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+<script>
+function makeDecision(requestId, action, equipmentName) {
+    document.getElementById('decision-request-id').value = requestId;
+    document.getElementById('decision-action').value = action;
+    document.getElementById('decision-action-text').textContent = action.charAt(0).toUpperCase() + action.slice(1);
+    document.getElementById('decision-equipment-name').textContent = equipmentName;
+    // Show/hide approval fields
+    if (action === 'approve') {
+        document.getElementById('approval-fields').style.display = 'block';
+    } else {
+        document.getElementById('approval-fields').style.display = 'none';
+    }
+    // Show the modal (compatible with Bootstrap 5)
+    var modalEl = document.getElementById('decisionModal');
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
+</script>

@@ -1,0 +1,74 @@
+{% extends 'qm/base.html' %}
+{% load static %}
+
+{% block content %}
+<div id="feedback" class="form-section mb-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-success text-white d-flex align-items-center">
+      <i class="fas fa-comment me-2"></i>
+      <span>CO Feedback</span>
+    </div>
+    {% if co_feedbacks %}
+      <div class="card-body">
+        {% for feedback in co_feedbacks %}
+          <div class="card mb-3 border-0 shadow-sm {% if not feedback.is_read_by_qm %}feedback-unread{% endif %}">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="card-title mb-0">
+                  <i class="fas fa-envelope me-2 text-success"></i>{{ feedback.subject|default:"General Feedback" }}
+                  {% if not feedback.is_read_by_qm %}
+                    <span class="badge bg-warning ms-2">New</span>
+                  {% endif %}
+                </h6>
+                <div class="text-end">
+                  <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>{{ feedback.date_sent|date:"M d, Y H:i" }}</small><br>
+                  <span class="badge bg-{% if feedback.feedback_type == 'urgent' %}danger{% elif feedback.feedback_type == 'policy' %}warning{% else %}info{% endif %} px-3 py-2 fs-6">
+                    {{ feedback.get_feedback_type_display }}
+                  </span>
+                </div>
+              </div>
+              <p class="card-text">{{ feedback.message }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="fas fa-user me-1"></i>From: {{ feedback.sent_by.get_full_name|default:feedback.sent_by.username }}</small>
+                {% if not feedback.is_read_by_qm %}
+                  <button type="button" class="btn btn-sm btn-outline-primary" onclick="markFeedbackRead({{ feedback.id }})">
+                    <i class="fas fa-check me-1"></i>Mark as Read
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="card-body text-center text-muted">
+        <i class="fas fa-comments fa-3x mb-3"></i>
+        <p>No feedback from CO yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+<script>
+function markFeedbackRead(feedbackId) {
+    fetch(`{% url 'mark_feedback_read' 0 %}`.replace('0', feedbackId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error marking feedback as read');
+        }
+    })
+    .catch(error => {
+        alert('Error marking feedback as read');
+    });
+}
+</script>

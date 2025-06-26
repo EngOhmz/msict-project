@@ -1,0 +1,43 @@
+{% extends 'department/base.html' %}
+{% block content %}
+<h3 class="mb-4"><i class="fas fa-bell me-2"></i>Notifications from QM</h3>
+
+{% if qm_responses %}
+<div class="card shadow-sm">
+  <div class="card-header bg-warning text-dark d-flex align-items-center">
+    <i class="fas fa-bell me-2"></i>
+    <span>New Responses from QM</span>
+    <span class="badge bg-danger ms-2">{{ unread_responses_count }} Unread</span>
+  </div>
+  <div class="card-body">
+    {% for response in qm_responses %}
+      <div class="alert d-flex justify-content-between align-items-start mb-3 p-3
+        {% if not response.is_read_by_department %}alert-warning border-start border-4 border-warning unread-notification{% else %}alert-light{% endif %}"
+        id="response-{{ response.id }}">
+        <div>
+          <h6 class="alert-heading mb-1"><i class="fas fa-reply me-2"></i>Response for: <span class="fw-bold">{{ response.request.equipment }}</span></h6>
+          <p class="mb-1">{{ response.response_message }}</p>
+          {% if response.pickup_instructions %}
+            <p class="mb-1"><strong>Pickup Instructions:</strong> {{ response.pickup_instructions }}</p>
+          {% endif %}
+          {% if response.expected_delivery_date %}
+            <p class="mb-1"><strong>Expected Delivery:</strong> {{ response.expected_delivery_date|date:"M d, Y" }}</p>
+          {% endif %}
+          <small class="text-muted"><i class="fas fa-clock me-1"></i>{{ response.response_date|date:"M d, Y H:i" }} by {{ response.responded_by.username }}</small>
+        </div>
+        {% if not response.is_read_by_department %}
+          <button class="btn btn-sm btn-outline-primary align-self-start" onclick="markAsRead({{ response.id }})">
+            <i class="fas fa-check"></i> Mark as Read
+          </button>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="text-center text-muted py-4">
+  <i class="fas fa-inbox fa-3x mb-3"></i>
+  <p>No new notifications at this time.</p>
+</div>
+{% endif %}
+{% endblock %}
